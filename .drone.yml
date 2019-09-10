@@ -30,6 +30,8 @@ pipeline:
 
   build-docker-image-tag:
     image: plugins/docker
+    secrets: [GITHUB_TOKEN]
+    build_args_from_env: [GITHUB_TOKEN]
     registry:
       from_secret: DOCKER_REGISTRY
     repo:

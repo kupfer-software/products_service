@@ -66,7 +66,8 @@ Here are some instructions for developing this service locally:
 
 ### Prerequisites
 
-You must have [Docker](https://www.docker.com/) installed.
+- You must have [Docker](https://www.docker.com/) installed.
+- Create a .env file according to the instructions on .env_sample.
 
 ### Build & run service locally
 

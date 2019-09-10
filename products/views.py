@@ -10,24 +10,13 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.http import FileResponse, HttpRequest
 
+from kupfer_commons.mixins import OrganizationCreateMixin, OrganizationQuerySetMixin
+
 from products.filters import ProductFilter
 from products.models import Category, Property, Product
 from products.pagination import DefaultLimitOffsetPagination
 from products.permissions import OrganizationPermission
 from . import serializer
-
-
-class OrganizationQuerySetMixin(object):
-    """
-    Adds functionality to return a queryset filtered by the organization_uuid in the JWT header.
-    If no jwt header is given, an empty queryset will be returned.
-    """
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        organization_uuid = self.request.session.get('jwt_organization_uuid', None)
-        if not organization_uuid:
-            return queryset.none()
-        return queryset.filter(organization_uuid=organization_uuid)
 
 
 class OrganizationExtensionMixin(object):
@@ -42,21 +31,17 @@ class OrganizationExtensionMixin(object):
         request_extended._full_data = data
         return request_extended
 
-    def create(self, request, *args, **kwargs):
-        request_extended = self._extend_request(request)
-        serializer = self.get_serializer(data=request_extended.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save(organization_uuid=request_extended.data['organization_uuid'])
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
     def update(self, request, *args, **kwargs):
         request_extended = self._extend_request(request)
         return super().update(request_extended, *args, **kwargs)
 
 
-class ProductViewSet(OrganizationQuerySetMixin,
-                     OrganizationExtensionMixin,
-                     viewsets.ModelViewSet):
+class ProductViewSet(
+    OrganizationQuerySetMixin,
+    OrganizationCreateMixin,
+    OrganizationExtensionMixin,
+    viewsets.ModelViewSet
+):
     """
     Product viewset is used to create list or inventory of products or THINGS
     to be tracked and related to a project.
